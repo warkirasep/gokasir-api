@@ -3,17 +3,23 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"gokasir-api/database"
+	"gokasir-api/models"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
-type Category struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+type Config struct {
+	Port   string `mapstructure:"PORT"`
+	DBConn string `mapstructure:"DB_CONN"`
 }
 
-var categories = []Category{
+var categories = []models.Category{
 	{ID: 1, Name: "Makanan"},
 	{ID: 2, Name: "Minuman"},
 	{ID: 3, Name: "Makanan Pedas"},
@@ -44,7 +50,7 @@ func updateCategoryByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var updateCategory Category
+	var updateCategory models.Category
 	err = json.NewDecoder(r.Body).Decode(&updateCategory)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -90,6 +96,26 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	if _, err := os.Stat(".env"); err == nil {
+		viper.SetConfigFile(".env")
+		_ = viper.ReadInConfig()
+	}
+
+	config := Config{
+		Port:   viper.GetString("PORT"),
+		DBConn: viper.GetString("DB_CONN"),
+	}
+
+	//Setup Database
+	db, err := database.InitDB(config.DBConn)
+	if err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+	defer db.Close()
+
 	// GET localhost:8080/api/categories/{id}
 	// PUT localhost:8080/api/categories/{id}
 	// DELETE localhost:8080/api/categories/{id}
@@ -111,7 +137,7 @@ func main() {
 			json.NewEncoder(w).Encode(categories)
 			return
 		} else if r.Method == "POST" {
-			var new Category
+			var new models.Category
 			err := json.NewDecoder(r.Body).Decode(&new)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
@@ -132,10 +158,10 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]string{"status": "OK", "message": "server is running"})
 	})
 
-	fmt.Println("Server berjalan di port 8080")
+	fmt.Println("Server running in port :" + config.Port)
 
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":"+config.Port, nil)
 	if err != nil {
-		fmt.Println("Error:", "gagal memulai server")
+		fmt.Println("Error:", err)
 	}
 }
