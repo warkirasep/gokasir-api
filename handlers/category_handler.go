@@ -40,7 +40,7 @@ func (h *CategoryHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(categories)
 }
 
-func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request){
+func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var category models.Category
 	err := json.NewDecoder(r.Body).Decode(&category)
 	if err != nil {
@@ -49,18 +49,18 @@ func (h *CategoryHandler) Create(w http.ResponseWriter, r *http.Request){
 	}
 
 	err = h.services.Create(&category)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Conten-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(category)
 }
 
-func (h *CategoryHandler) HandlerCategoryByID(w http.ResponseWriter, r *http.Request){
-	switch r.Method{
+func (h *CategoryHandler) HandlerCategoryByID(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
 	case http.MethodGet:
 		h.GetByID(w, r)
 	case http.MethodPut:
@@ -72,65 +72,65 @@ func (h *CategoryHandler) HandlerCategoryByID(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (h *CategoryHandler) GetByID(w http.ResponseWriter, r *http.Request){
+func (h *CategoryHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
 		return
 	}
 
 	category, err := h.services.GetByID(id)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Conten-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(category)
 }
 
-func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request){
+func (h *CategoryHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
 		return
 	}
 
 	var category models.Category
 	err = json.NewDecoder(r.Body).Decode(&category)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	category.ID = id
 	err = h.services.Update(&category)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Conten-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(category)
 }
 
-func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request){
+func (h *CategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/categories/")
 	id, err := strconv.Atoi(idStr)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Invalid Category ID", http.StatusBadRequest)
 		return
 	}
 
 	err = h.services.Delete(id)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Conten-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Category deleted successfully",
 	})
